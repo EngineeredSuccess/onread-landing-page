@@ -12,7 +12,14 @@ export async function GET(req: NextRequest) {
         hasResendApiKey: Boolean(process.env.RESEND_API_KEY),
         resendApiKeyPrefix: process.env.RESEND_API_KEY ? process.env.RESEND_API_KEY.slice(0, 7) + '...' : null,
         resendFromEmail: process.env.RESEND_FROM_EMAIL || 'OnRead <onboarding@resend.dev> (default)',
-        resendAudienceId: process.env.RESEND_AUDIENCE_ID || null,
+        hasSupabaseUrl: Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL),
+        hasSupabaseKey: Boolean(
+          process.env.SUPABASE_SERVICE_ROLE_KEY ||
+          process.env.SUPABASE_SECRET_KEY ||
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+          process.env.SUPABASE_ANON_KEY ||
+          process.env.SUPABASE_PUBLISHABLE_KEY
+        ),
       },
     });
   }
