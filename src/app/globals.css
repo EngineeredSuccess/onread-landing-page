@@ -1,0 +1,126 @@
+@import "tailwindcss";
+
+:root {
+  --font-display: var(--font-space-grotesk), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), monospace;
+  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  --neon-pink: #FF006E;
+  --neon-green: #39FF14;
+  --neon-purple: #BC13FE;
+  --deep-black: #0A0A0A;
+  --dark-surface: #141414;
+  --dark-card: #191919;
+  --dark-border: #282828;
+  --error-red: #FF2D2D;
+  --warning-amber: #FFB800;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--deep-black);
+  color: #FFFFFF;
+}
+
+h1, h2, h3, h4, h5, h6, .font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono {
+  font-family: var(--font-mono);
+}
+
+/* Cyber & Neon Glow Utilities */
+.neon-glow-pink {
+  box-shadow: 0 0 20px rgba(255, 0, 110, 0.45), 0 0 45px rgba(255, 0, 110, 0.2);
+}
+
+.neon-glow-pink-hover:hover {
+  box-shadow: 0 0 30px rgba(255, 0, 110, 0.7), 0 0 60px rgba(255, 0, 110, 0.35);
+}
+
+.neon-glow-green {
+  box-shadow: 0 0 20px rgba(57, 255, 20, 0.4), 0 0 45px rgba(57, 255, 20, 0.2);
+}
+
+.neon-glow-purple {
+  box-shadow: 0 0 20px rgba(188, 19, 254, 0.4), 0 0 45px rgba(188, 19, 254, 0.2);
+}
+
+.neon-glow-red {
+  box-shadow: 0 0 20px rgba(255, 45, 45, 0.45), 0 0 45px rgba(255, 45, 45, 0.2);
+}
+
+.neon-text-pink {
+  text-shadow: 0 0 12px rgba(255, 0, 110, 0.8), 0 0 30px rgba(255, 0, 110, 0.4);
+}
+
+.neon-text-green {
+  text-shadow: 0 0 12px rgba(57, 255, 20, 0.8), 0 0 30px rgba(57, 255, 20, 0.4);
+}
+
+.neon-text-red {
+  text-shadow: 0 0 12px rgba(255, 45, 45, 0.8), 0 0 30px rgba(255, 45, 45, 0.4);
+}
+
+.neon-border-pink {
+  border-color: #FF006E;
+  box-shadow: inset 0 0 12px rgba(255, 0, 110, 0.15), 0 0 15px rgba(255, 0, 110, 0.25);
+}
+
+.neon-border-red {
+  border-color: #FF2D2D;
+  box-shadow: inset 0 0 12px rgba(255, 45, 45, 0.15), 0 0 15px rgba(255, 45, 45, 0.25);
+}
+
+/* Background Cyber Grid */
+.cyber-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.cyber-grid-pink {
+  background-image: 
+    linear-gradient(to right, rgba(255, 0, 110, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 0, 110, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* Scanline Effect */
+.scanline-overlay {
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0),
+    rgba(255,255,255,0) 50%,
+    rgba(0, 0, 0, 0.4) 50%,
+    rgba(0, 0, 0, 0.4)
+  );
+  background-size: 100% 4px;
+}
+
+/* Pulsing Badge & Radar */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0A0A0A;
+}
+::-webkit-scrollbar-thumb {
+  background: #27272A;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #FF006E;
+}

@@ -1,0 +1,13 @@
+{
+  "name": "onread-export-utils",
+  "version": "1.0.0",
+  "description": "Figma → CapCut export pipeline for OnRead marketing videos",
+  "scripts": {
+    "export": "node export_exports.js",
+    "dev": "echo 'Use ./export_onread.sh or set FIGMA_TOKEN and run node export_exports.js'"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.2",
+    "sharp": "^0.110.0"
+  }
+}
