@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addWaitlistEmail } from '@/lib/supabase';
-import { addContactToResend, isResendConfigured } from '@/lib/resend';
+import { addContactToResend } from '@/lib/resend';
 
 // RFC 5322 compliant email regex simplified
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -28,22 +28,30 @@ export async function POST(req: NextRequest) {
 
     const userAgent = req.headers.get('user-agent') || undefined;
 
-    // 1. Record into Resend if configured
-    if (isResendConfigured) {
-      await addContactToResend(trimmedEmail, source || 'landing_page');
+    // 1. Record contact and trigger confirmation email via Resend
+    let resendResult = null;
+    if (process.env.RESEND_API_KEY) {
+      resendResult = await addContactToResend(trimmedEmail, source || 'landing_page');
+    } else {
+      console.log('[Waitlist API] No RESEND_API_KEY configured.');
     }
 
     // 2. Record into Supabase / Mock fallback
-    const result = await addWaitlistEmail(trimmedEmail, source || 'landing_page', userAgent);
+    const dbResult = await addWaitlistEmail(trimmedEmail, source || 'landing_page', userAgent);
 
     return NextResponse.json(
       {
         success: true,
-        message: result.isDuplicate
+        message: dbResult.isDuplicate
           ? "You're already on the VIP waitlist! We'll notify you first."
           : "You're on the list. Prepare your receipts, we drop soon. +100 Aura for moving fast. 💀",
-        isDuplicate: result.isDuplicate,
+        isDuplicate: dbResult.isDuplicate,
         auraBonus: 100,
+        resend: resendResult ? {
+          emailSent: resendResult.emailSent,
+          emailId: resendResult.emailId,
+          error: resendResult.emailError,
+        } : null,
       },
       { status: 200 }
     );
