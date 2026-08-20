@@ -34,12 +34,20 @@ export default function Navbar() {
             <span>2,840+ receipts judged today</span>
           </div>
 
-          <a
-            href="#waitlist"
-            className="px-3.5 py-1.5 rounded-lg bg-[#FF006E] hover:bg-[#ff1a7d] text-white font-semibold text-xs sm:text-sm transition-all transform active:scale-95 shadow-[0_0_15px_rgba(255,0,110,0.4)]"
+          <button
+            onClick={() => {
+              const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement | null;
+              if (emailInput) {
+                emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => emailInput.focus(), 300);
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="px-3.5 py-1.5 rounded-lg bg-[#FF006E] hover:bg-[#ff1a7d] text-white font-semibold text-xs sm:text-sm transition-all transform active:scale-95 shadow-[0_0_15px_rgba(255,0,110,0.4)] cursor-pointer"
           >
             Claim Spot
-          </a>
+          </button>
         </div>
       </div>
     </header>

@@ -31,9 +31,20 @@ export default function Footer() {
         {/* Links & Copyright */}
         <div className="flex flex-wrap items-center justify-center gap-6 text-xs font-mono text-neutral-400">
           <span>© {new Date().getFullYear()} OnRead. All rights reserved.</span>
-          <a href="#waitlist" className="hover:text-white transition-colors">
+          <button
+            onClick={() => {
+              const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement | null;
+              if (emailInput) {
+                emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => emailInput.focus(), 300);
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            className="hover:text-white transition-colors cursor-pointer"
+          >
             Drop #01 Waitlist
-          </a>
+          </button>
           <span className="hover:text-white transition-colors cursor-pointer">
             Terms of Service
           </span>

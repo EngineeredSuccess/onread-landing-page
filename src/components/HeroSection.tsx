@@ -6,7 +6,7 @@ import { Sparkles, Zap, Users, ShieldAlert } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 overflow-hidden">
+    <section id="waitlist" className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 overflow-hidden scroll-mt-20">
       {/* Ambient background glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-[#FF006E]/15 rounded-full blur-[120px] pointer-events-none -z-10" />
       <div className="absolute top-1/3 left-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-[#BC13FE]/10 rounded-full blur-[100px] pointer-events-none -z-10" />
@@ -37,7 +37,7 @@ export default function HeroSection() {
         </p>
 
         {/* Waitlist Form Component */}
-        <div id="waitlist" className="w-full max-w-lg mb-6">
+        <div className="w-full max-w-lg mb-6">
           <WaitlistForm id="hero-waitlist" source="hero" />
         </div>
 

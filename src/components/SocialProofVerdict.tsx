@@ -235,13 +235,21 @@ export default function SocialProofVerdict() {
           </div>
 
           {/* Bottom Card CTA */}
-          <a
-            href="#waitlist"
+          <button
+            onClick={() => {
+              const emailInput = document.querySelector('input[type="email"]') as HTMLInputElement | null;
+              if (emailInput) {
+                emailInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => emailInput.focus(), 300);
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
             className="w-full py-3.5 px-4 rounded-xl bg-[#FF006E] hover:bg-[#ff1a7d] text-white font-display font-bold text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(255,0,110,0.4)] cursor-pointer"
           >
             <Flame className="w-4 h-4" />
             <span>Check Your Own Screenshot Now</span>
-          </a>
+          </button>
         </div>
       </div>
     </section>
