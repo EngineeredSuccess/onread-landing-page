@@ -9,8 +9,8 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto flex flex-col items-center text-center space-y-6">
         {/* Brand */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-7 h-7 rounded-md bg-[#141414] border border-[#FF006E]/40 text-[#FF006E]">
-            <Flame className="w-4 h-4 fill-[#FF006E]" />
+          <div className="flex items-center justify-center w-7 h-7 rounded-md overflow-hidden border border-[#FF006E]/40">
+            <img src="/logo.png" alt="OnRead Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-display font-bold text-lg text-white">
             On<span className="text-[#FF006E]">Read</span>
