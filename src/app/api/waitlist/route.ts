@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { addWaitlistEmail } from '@/lib/supabase';
+import { addContactToResend, isResendConfigured } from '@/lib/resend';
 
 // RFC 5322 compliant email regex simplified
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -26,6 +27,13 @@ export async function POST(req: NextRequest) {
     }
 
     const userAgent = req.headers.get('user-agent') || undefined;
+
+    // 1. Record into Resend if configured
+    if (isResendConfigured) {
+      await addContactToResend(trimmedEmail, source || 'landing_page');
+    }
+
+    // 2. Record into Supabase / Mock fallback
     const result = await addWaitlistEmail(trimmedEmail, source || 'landing_page', userAgent);
 
     return NextResponse.json(
