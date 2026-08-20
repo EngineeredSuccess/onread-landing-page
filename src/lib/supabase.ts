@@ -21,6 +21,9 @@ export function getSupabaseClient() {
   });
 }
 
+// Backward-compatible export
+export const supabase = getSupabaseClient();
+
 // In-memory mock storage for development/preview when keys are not configured yet
 const mockWaitlist: Array<{ email: string; createdAt: string; id: string }> = [];
 

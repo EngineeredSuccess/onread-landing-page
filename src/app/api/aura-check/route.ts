@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase';
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const { user_id, image_data, image_url, filename } = body;
+    const supabase = getSupabaseClient();
 
     if (!user_id || (!image_data && !image_url)) {
       return NextResponse.json(
@@ -220,8 +221,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Store result in Supabase
-    if (supabase) {
-      const { data: stored, error: storeError } = await supabase
+    if (supabase) {      const { data: stored, error: storeError } = await supabase
         .from('aura_checks')
         .insert({
           user_id,
@@ -246,7 +246,7 @@ export async function POST(req: NextRequest) {
         await supabase.storage
           .from(process.env.NEXT_PUBLIC_STORAGE_BUCKET || 'onread-uploads')
           .remove([storageKey])
-          .catch((e) => console.log('[AuraCheck] Temp cleanup skipped:', e.message));
+          .catch((e: { message?: string }) => console.log('[AuraCheck] Temp cleanup skipped:', e?.message));
       }
     }
 
