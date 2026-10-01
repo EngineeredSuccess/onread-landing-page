@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Flame, ShieldCheck } from 'lucide-react';
+import Image from 'next/image';
+import { ShieldCheck } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -10,7 +11,7 @@ export default function Footer() {
         {/* Brand */}
         <div className="flex items-center gap-2">
           <div className="flex items-center justify-center w-7 h-7 rounded-md overflow-hidden border border-[#FF006E]/40">
-            <img src="/logo.png" alt="OnRead Logo" className="w-full h-full object-cover" />
+            <Image src="/logo.png" alt="OnRead Logo" width={28} height={28} className="h-full w-full object-cover" />
           </div>
           <span className="font-display font-bold text-lg text-white">
             On<span className="text-[#FF006E]">Read</span>

@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, DragEvent, ClipboardEvent } from 'react';
+import React, { useState, useRef, useEffect, useCallback, DragEvent } from 'react';
+import NextImage from 'next/image';
 import { Upload, X, Loader2 } from 'lucide-react';
 
 interface UploadZoneProps {
@@ -11,13 +12,16 @@ interface UploadZoneProps {
 }
 
 type PreviewFile = File & { preview: string };
+const SUPPORTED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp', 'image/gif']);
 
 export default function UploadZone({ onUpload, isLoading, disabled, error }: UploadZoneProps) {
   const [dragActive, setDragActive] = useState(false);
   const [previewFile, setPreviewFile] = useState<PreviewFile | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const compressImage = (file: File): Promise<File> => {
+  const compressImage = useCallback((file: File): Promise<File> => {
     return new Promise((resolve, reject) => {
       const img = new Image();
       const objectUrl = URL.createObjectURL(file);
@@ -66,23 +70,45 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
 
       img.src = objectUrl;
     });
-  };
+  }, []);
 
-  const handleFile = async (file: File) => {
-    if (!file.type.startsWith('image/')) {
-      alert('Please upload a PNG or JPG screenshot.');
+  const handleFile = useCallback(async (file: File) => {
+    if (!SUPPORTED_IMAGE_TYPES.has(file.type)) {
+      setLocalError('Choose a PNG, JPG, WebP or GIF screenshot.');
       return;
     }
 
-    const finalFile = file.size > 5 * 1024 * 1024 ? await compressImage(file) : file;
-    const preview: PreviewFile = new File([finalFile], finalFile.name, {
-      type: finalFile.type,
-      lastModified: finalFile.lastModified,
-    }) as PreviewFile;
-    Object.assign(preview, { preview: URL.createObjectURL(finalFile) });
-    setPreviewFile(preview);
-    onUpload(finalFile);
-  };
+    setLocalError(null);
+    setIsProcessing(true);
+    try {
+      const finalFile = file.size > 5 * 1024 * 1024 ? await compressImage(file) : file;
+      const preview: PreviewFile = new File([finalFile], finalFile.name, {
+        type: finalFile.type,
+        lastModified: finalFile.lastModified,
+      }) as PreviewFile;
+      Object.assign(preview, { preview: URL.createObjectURL(finalFile) });
+      setPreviewFile(preview);
+    } catch {
+      setLocalError('Could not prepare this image. Try a smaller PNG or JPG screenshot.');
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [compressImage]);
+
+  useEffect(() => {
+    if (previewFile || disabled || isLoading) return;
+    const handleWindowPaste = (event: globalThis.ClipboardEvent) => {
+      const imageItem = Array.from(event.clipboardData?.items || []).find((item) => item.type.startsWith('image/'));
+      const file = imageItem?.getAsFile();
+      if (file) void handleFile(file);
+    };
+    window.addEventListener('paste', handleWindowPaste);
+    return () => window.removeEventListener('paste', handleWindowPaste);
+  }, [previewFile, disabled, isLoading, handleFile]);
+
+  useEffect(() => () => {
+    if (previewFile?.preview) URL.revokeObjectURL(previewFile.preview);
+  }, [previewFile]);
 
   const handleDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -100,17 +126,9 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
   };
 
   const handleRemove = () => {
-    if (previewFile?.preview) URL.revokeObjectURL(previewFile.preview);
     setPreviewFile(null);
-  };
-
-  const handlePaste = (e: ClipboardEvent) => {
-    const items = Array.from(e.clipboardData?.items || []);
-    const imageItem = items.find((item: DataTransferItem) => item.kind === 'file');
-    if (imageItem) {
-      const file = imageItem.getAsFile();
-      if (file) void handleFile(file);
-    }
+    setLocalError(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -127,11 +145,11 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
             onDragOver={handleDrag}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
-            onPaste={handlePaste}
           >
             <input
+              ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/png,image/jpeg,image/webp,image/gif"
               capture="environment"
               className="hidden"
               id="screenshot-upload"
@@ -158,28 +176,35 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
               </div>
               <div className="text-center">
                 <span className="font-display font-bold text-white text-lg block mb-1">
-                  {isLoading ? 'Judging your aura...' : 'Drop your screenshot'}
+                  {isProcessing ? 'Preparing your screenshot...' : 'Drop your screenshot'}
                 </span>
-                <span className="text-sm text-neutral-400 block">or tap to upload (PNG/JPG, max 5MB)</span>
-                <span className="text-xs font-mono text-neutral-500 mt-2 block">⌘V to paste screenshot</span>
+                <span className="text-sm text-neutral-400 block">or tap to upload (PNG, JPG, WebP or GIF, max 5MB)</span>
+                <span className="text-xs font-mono text-neutral-500 mt-2 block">Paste a screenshot with Ctrl+V / ⌘V</span>
               </div>
             </label>
           </div>
 
-          {error && (
+          {(localError || error) && (
             <div className="mt-3 text-sm font-mono text-[#FF2D2D] bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-lg px-3 py-2 flex items-center gap-2">
               <span>💀</span>
-              <span>{error}</span>
+              <span>{localError || error}</span>
             </div>
           )}
         </>
       ) : (
         <div className="relative aspect-[9/16] max-w-xs mx-auto rounded-xl overflow-hidden border border-[#27272A] bg-[#0A0A0A]">
-          {previewFile && (
-            <img src={previewFile.preview} alt="Preview" className="w-full h-full object-cover" />
-          )}
+          <NextImage
+            src={previewFile.preview}
+            alt="Preview of selected screenshot"
+            fill
+            unoptimized
+            sizes="(max-width: 384px) 100vw, 384px"
+            className="object-cover"
+          />
           <button
+            type="button"
             onClick={handleRemove}
+            aria-label="Remove selected screenshot"
             className="absolute top-2 right-2 p-1 rounded-full bg-[#FF2D2D]/20 hover:bg-[#FF2D2D]/40 text-[#FF2D2D] transition-colors"
             disabled={isLoading}
           >
@@ -192,6 +217,17 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
             </div>
           )}
         </div>
+      )}
+
+      {previewFile && (
+        <button
+          type="button"
+          onClick={() => onUpload(previewFile)}
+          disabled={disabled || isLoading}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#FF006E] px-4 py-4 font-display text-sm font-bold tracking-wider text-white shadow-[0_0_20px_rgba(255,0,110,0.3)] transition hover:bg-[#ff1a7d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Upload className="h-4 w-4" /> SCAN MY AURA
+        </button>
       )}
     </div>
   );

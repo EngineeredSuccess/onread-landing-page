@@ -8,7 +8,7 @@ export function getResendClient() {
   return new Resend(apiKey);
 }
 
-export async function addContactToResend(email: string, source: string = 'landing_page') {
+export async function addContactToResend(email: string) {
   const apiKey = process.env.RESEND_API_KEY;
   const resend = getResendClient();
 

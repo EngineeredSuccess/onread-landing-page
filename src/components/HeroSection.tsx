@@ -2,7 +2,7 @@
 
 import React from 'react';
 import WaitlistForm from './WaitlistForm';
-import { Sparkles, Zap, Users, ShieldAlert } from 'lucide-react';
+import { Zap } from 'lucide-react';
 
 export default function HeroSection() {
   return (

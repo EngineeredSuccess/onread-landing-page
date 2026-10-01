@@ -1,220 +1,211 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import UploadZone from '@/components/UploadZone';
-import VerdictCard, { AuraVerdict } from '@/components/VerdictCard';
-import { Zap, Skull, ArrowLeft } from 'lucide-react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { ArrowLeft, Cpu, Skull } from 'lucide-react';
+import UploadZone from '@/components/UploadZone';
+import AuraResultsScreen from '@/components/AuraResultsScreen';
+import type { AuraVerdict } from '@/components/VerdictCard';
+
+type CheckStep = 'idle' | 'uploading' | 'analyzing' | 'result';
+
+const TERMINAL_LINES = [
+  '> OCR stream initialized...',
+  '> Parsing message bubbles...',
+  '> Measuring response energy...',
+  '> Checking red flags...',
+  '> Compiling your verdict...',
+];
+
+function subscribeToQuota(onStoreChange: () => void) {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener('onread:quota-change', onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener('onread:quota-change', onStoreChange);
+  };
+}
+
+function getStoredQuota() {
+  try {
+    const value = Number.parseInt(localStorage.getItem('onread_checks_remaining') || '3', 10);
+    return Number.isFinite(value) ? Math.max(0, value) : 3;
+  } catch {
+    return 3;
+  }
+}
+
+function getServerQuota() {
+  return 3;
+}
 
 export default function CheckPage() {
-  const [step, setStep] = useState<'idle' | 'uploading' | 'analyzing' | 'result'>('idle');
+  const [step, setStep] = useState<CheckStep>('idle');
   const [verdict, setVerdict] = useState<AuraVerdict | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
-  const [checksRemaining, setChecksRemaining] = useState(3);
+  const [visibleLines, setVisibleLines] = useState(0);
+  const checksRemaining = useSyncExternalStore(subscribeToQuota, getStoredQuota, getServerQuota);
 
   useEffect(() => {
-    const stored = localStorage.getItem('onread_user_id');
-    if (!stored) {
-      const newId = `anon-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      localStorage.setItem('onread_user_id', newId);
+    try {
+      let userId = localStorage.getItem('onread_user_id');
+      if (!userId) {
+        userId = `anon-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+        localStorage.setItem('onread_user_id', userId);
+      }
+    } catch {
+      // The checker can still run without persistent browser storage.
     }
-
-    const remaining = parseInt(localStorage.getItem('onread_checks_remaining') || '3', 10);
-    setChecksRemaining(remaining);
   }, []);
+
+  useEffect(() => {
+    if (step !== 'uploading' && step !== 'analyzing') return;
+
+    const progressTimer = window.setInterval(() => {
+      setProgress((current) => Math.min(current + Math.random() * 3 + 1, 94));
+    }, 250);
+    const lineTimer = window.setInterval(() => {
+      setVisibleLines((current) => Math.min(current + 1, TERMINAL_LINES.length));
+    }, 700);
+
+    return () => {
+      window.clearInterval(progressTimer);
+      window.clearInterval(lineTimer);
+    };
+  }, [step]);
 
   const handleUpload = async (file: File) => {
     setError(null);
     setVerdict(null);
+    setProgress(8);
+    setVisibleLines(0);
     setStep('uploading');
-    setProgress(10);
 
-    const userId = localStorage.getItem('onread_user_id') || `anon-${Date.now()}`;
-
-    // Simulate upload progress
-    const simulateProgress = setInterval(() => {
-      setProgress((p) => Math.min(p + Math.random() * 10, 90));
-    }, 200);
-
+    let userId = `anon-${Date.now()}`;
     try {
-      setProgress(25);
-
-      // Convert file to base64
-      const toBase64 = (file: File): Promise<string> =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-      const imageData = await toBase64(file);
-      setProgress(45);
-
-      // Call backend
-      const res = await fetch('/api/aura-check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: userId,
-          image_data: imageData,
-          filename: file.name,
-        }),
+      userId = localStorage.getItem('onread_user_id') || userId;
+      const imageData = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Could not read this image.'));
+        reader.onerror = () => reject(new Error('Could not read this image.'));
+        reader.readAsDataURL(file);
       });
 
-      clearInterval(simulateProgress);
-      setProgress(100);
       setStep('analyzing');
+      const response = await fetch('/api/aura-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ user_id: userId, image_data: imageData, filename: file.name }),
+      });
+      const data = await response.json();
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        if (data.error === 'ai_error' || data.error === 'no_text_detected' || data.error === 'unsafe_content' || data.error === 'unreadable_text' || data.error === 'no_conversation') {
-          setError(data.message || 'The AI shrugged. Something went wrong with the analysis.');
-        } else if (data.error === 'Free weekly checks exhausted') {
-          setError('You\'ve used all 3 free Aura Checks this week. Share the app to earn more!');
-        } else {
-          setError(data.error || 'Something went wrong. The void is silent...');
+      if (!response.ok) {
+        if (data.error === 'Free weekly checks exhausted') {
+          throw new Error("You've used all 3 free Aura Checks this week.");
         }
-        setStep('idle');
-        setProgress(0);
-        return;
+        throw new Error(data.message || data.error || 'The scan failed. Please try again.');
       }
 
-      // AI analysis is done — show verdict
-      setVerdict(data.verdict);
+      if (!data.verdict || data.verdict.error) {
+        throw new Error(data.verdict?.message || 'A.U.R.A. could not read this screenshot. Try a clearer image.');
+      }
+
+      setProgress(100);
+      setVerdict(data.verdict as AuraVerdict);
       setStep('result');
-
-      // Decrement checks remaining
-      const newRemaining = Math.max(0, checksRemaining - 1);
-      setChecksRemaining(newRemaining);
-      localStorage.setItem('onread_checks_remaining', String(newRemaining));
-
-    } catch (err: unknown) {
-      clearInterval(simulateProgress);
-      const msg = err instanceof Error ? err.message : 'Network error. Check your connection.';
-      setError(msg);
+      const remaining = Math.max(0, checksRemaining - 1);
+      try {
+        localStorage.setItem('onread_checks_remaining', String(remaining));
+        window.dispatchEvent(new Event('onread:quota-change'));
+      } catch {
+        // Keep the result available if browser storage is disabled.
+      }
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Network error. Please try again.');
       setStep('idle');
       setProgress(0);
+      setVisibleLines(0);
     }
   };
 
-  const handleNewCheck = () => {
+  const handleReset = () => {
     setVerdict(null);
-    setStep('idle');
-    setProgress(0);
     setError(null);
+    setProgress(0);
+    setVisibleLines(0);
+    setStep('idle');
   };
 
-  const AnalyzingScreen = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] gap-6 text-center">
-      <div className="relative">
-        <div className="w-20 h-20 rounded-full bg-[#FF006E] flex items-center justify-center animate-pulse">
-          <Skull className="w-10 h-10 text-white animate-pulse" />
-        </div>
-        <div className="absolute -inset-2 rounded-full bg-[#FF006E]/30 animate-ping" />
-      </div>
-
-      <div className="space-y-3">
-        <p className="font-display font-bold text-xl text-white">A.U.R.A. is judging...</p>
-        <p className="text-sm text-neutral-400 max-w-xs">
-          {progress < 30
-            ? 'Scanning the screenshot...'
-            : progress < 60
-              ? 'Extracting conversation text...'
-              : progress < 90
-                ? 'Detecting red flags...'
-                : 'Formulating the roast...'}
-        </p>
-      </div>
-
-      <div className="w-full max-w-xs bg-[#1F1F23] rounded-full h-2 overflow-hidden">
-        <div
-          className="h-full bg-gradient-to-r from-[#FF006E] to-[#BC13FE] rounded-full transition-all duration-300 ease-out"
-          style={{ width: `${progress}%` }}
-        />
-      </div>
-
-      <p className="text-xs font-mono text-neutral-500">
-        Progress: {Math.round(progress)}% — GPT-4o Vision engine
-      </p>
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-[#0A0A0A] pt-16 pb-32 px-4">
-      <div className="max-w-lg mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <Link
-            href="/"
-            className="flex items-center gap-1.5 text-neutral-400 hover:text-white transition-colors text-sm font-mono"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Home</span>
+    <main className="relative min-h-screen overflow-hidden bg-[#0A0A0A] px-4 pb-16 pt-6 text-white sm:pt-10">
+      <div className="pointer-events-none absolute inset-0 cyber-grid-pink opacity-30" />
+      <div className="relative z-10 mx-auto max-w-lg">
+        <div className="mb-8 flex items-center justify-between">
+          <Link href="/" className="inline-flex items-center gap-2 text-sm font-mono text-neutral-400 transition hover:text-white">
+            <ArrowLeft className="h-4 w-4" /> Back to OnRead
           </Link>
-          <div className="text-right">
-            <span className="font-mono text-xs text-neutral-400">Checks remaining:</span>
-            <span className="font-display font-bold text-lg text-[#FF006E]">
-              {checksRemaining}/3
-            </span>
-          </div>
+          <span className="rounded-full border border-[#27272A] bg-[#141414] px-3 py-1 text-xs font-mono text-neutral-400">
+            {checksRemaining} free checks left
+          </span>
         </div>
 
-        {/* Main Content */}
         {step === 'result' && verdict ? (
-          <VerdictCard
-            verdict={verdict}
-            onNewCheck={handleNewCheck}
-            onShare={() => {
-              const text = `My OnRead Aura Score: ${verdict.auraScore} (${verdict.tier}) — ${verdict.tldr}`;
-              if (navigator.share) {
-                void navigator.share({ title: 'OnRead', text: text, url: 'https://onread.app' });
-              }
-            }}
-          />
+          <AuraResultsScreen verdict={verdict} onReset={handleReset} />
         ) : step === 'uploading' || step === 'analyzing' ? (
-          <AnalyzingScreen />
+          <section className="flex min-h-[520px] flex-col items-center justify-center gap-6 text-center">
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-[#FF006E] shadow-[0_0_35px_rgba(255,0,110,0.35)]">
+              <Skull className="h-10 w-10 animate-pulse motion-reduce:animate-none" />
+              <span className="absolute -inset-2 animate-ping rounded-full border border-[#FF006E]/40 motion-reduce:animate-none" />
+            </div>
+            <div>
+              <h1 className="font-display text-2xl font-extrabold tracking-tight">A.U.R.A. is judging...</h1>
+              <p className="mt-2 text-sm text-neutral-400">Scanning the screenshot and finding the red flags.</p>
+            </div>
+            <div className="w-full">
+              <div className="mb-2 flex justify-between font-mono text-[11px] text-neutral-500">
+                <span>ANALYSIS IN PROGRESS</span><span>{Math.round(progress)}%</span>
+              </div>
+              <div className="h-2 overflow-hidden rounded-full bg-[#1F1F23]">
+                <div className="h-full rounded-full bg-gradient-to-r from-[#FF006E] to-[#BC13FE] transition-[width] duration-300" style={{ width: `${progress}%` }} />
+              </div>
+            </div>
+            <div className="w-full overflow-hidden rounded-xl border border-[#39FF14]/20 bg-[#050505] text-left">
+              <div className="flex items-center gap-2 border-b border-[#39FF14]/10 bg-[#0E0E0E] px-4 py-3 text-[10px] font-mono text-neutral-500">
+                <Cpu className="h-3.5 w-3.5 text-[#39FF14]" /> ONREAD SCAN CONSOLE
+              </div>
+              <div className="min-h-36 space-y-2 p-4 font-mono text-xs text-[#39FF14]/80">
+                {TERMINAL_LINES.slice(0, visibleLines).map((line) => <p key={line}>{line}</p>)}
+                {visibleLines < TERMINAL_LINES.length && <span className="blink-cursor motion-reduce:animate-none" />}
+              </div>
+            </div>
+          </section>
         ) : (
-          <div className="space-y-6">
-            <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-white text-center uppercase tracking-tight">
-              Drop Your{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#FF006E] via-[#BC13FE] to-[#FF006E] drop-shadow-[0_0_25px_rgba(255,0,110,0.4)]">
-                Receipt
-              </span>
-            </h1>
-            <p className="text-center text-neutral-300 text-sm leading-relaxed">
-              Screenshot your toxic texts, dry replies, or group chat disasters.{' '}
-              <strong>A.U.R.A.</strong> will roast you into shape.
-            </p>
+          <section className="space-y-6">
+            <header className="text-center">
+              <p className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#FF006E]/30 bg-[#FF006E]/10 px-3 py-1 text-[10px] font-mono tracking-wider text-[#FF006E]">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#FF006E]" /> THE AURA SCANNER
+              </p>
+              <h1 className="font-display text-4xl font-black uppercase tracking-tight sm:text-5xl">
+                Drop the chat.<br /><span className="text-[#FF006E]">Get roasted.</span>
+              </h1>
+              <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-neutral-400">
+                Upload a screenshot of the conversation. A.U.R.A. will read the receipts and give you the verdict.
+              </p>
+            </header>
 
-            <UploadZone
-              onUpload={handleUpload}
-              isLoading={false}
-              error={error}
-              disabled={checksRemaining <= 0}
-            />
+            <UploadZone onUpload={handleUpload} isLoading={false} error={error} disabled={checksRemaining <= 0} />
 
             {checksRemaining <= 0 && (
-              <div className="bg-[#FF2D2D]/10 border border-[#FF2D2D]/30 rounded-xl p-4 text-center">
-                <p className="text-[#FF2D2D] text-sm font-medium">
-                  You've used all 3 free checks this week.
-                </p>
-                <button
-                  onClick={() => {
-                    localStorage.setItem('onread_checks_remaining', '3');
-                    setChecksRemaining(3);
-                  }}
-                  className="mt-2 text-xs text-neutral-500 underline hover:text-neutral-300"
-                >
-                  Reset for testing — in production this would unlock Pro
-                </button>
-              </div>
+              <p className="rounded-xl border border-[#FF2D2D]/30 bg-[#FF2D2D]/10 p-4 text-center text-sm text-[#FF8A8A]">
+                You&apos;ve used all 3 free checks this week. Join the waitlist for launch updates.
+                {' '}<Link href="/#waitlist" className="underline underline-offset-2">Join the waitlist</Link>
+              </p>
             )}
-          </div>
+            <p className="text-center text-[11px] font-mono text-neutral-600">Your screenshot is processed for this check and then removed.</p>
+          </section>
         )}
       </div>
-    </div>
+    </main>
   );
 }

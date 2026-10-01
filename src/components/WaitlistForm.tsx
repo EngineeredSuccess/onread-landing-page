@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import confetti from 'canvas-confetti';
-import { ArrowRight, CheckCircle2, Copy, Share2, Sparkles, Loader2, Skull } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Copy, Share2, Loader2, Skull } from 'lucide-react';
 
 interface WaitlistFormProps {
   id?: string;
@@ -114,7 +114,7 @@ export default function WaitlistForm({ id = 'waitlist-form', source = 'hero' }: 
           </p>
           <div className="mt-3 pt-3 border-t border-[#1F1F23] flex items-center justify-between text-xs font-mono text-neutral-400">
             <span>VIP PRIORITY QUEUE</span>
-            <span className="text-[#39FF14]">CONFIRMED #0{Math.floor(Math.random() * 80 + 380)}</span>
+            <span className="text-[#39FF14]">REQUEST RECEIVED</span>
           </div>
         </div>
 

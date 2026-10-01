@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Flame, AlertTriangle, CheckCircle, ShieldAlert, Sparkles, MessageSquare, Terminal } from 'lucide-react';
+import { Flame, MessageSquare, Terminal } from 'lucide-react';
 
 interface Scenario {
   id: string;

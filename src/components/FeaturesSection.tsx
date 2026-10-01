@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Flame, Skull, Lock, Zap, Shield, Sparkles } from 'lucide-react';
+import { Flame, Skull, Lock, Zap } from 'lucide-react';
 
 const FEATURES = [
   {

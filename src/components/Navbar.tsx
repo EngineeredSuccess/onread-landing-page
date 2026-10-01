@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Flame, ShieldAlert } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Navbar() {
   return (
@@ -10,7 +10,7 @@ export default function Navbar() {
         {/* Brand Logo */}
         <div className="flex items-center gap-2.5">
           <div className="relative flex items-center justify-center w-9 h-9 rounded-lg overflow-hidden border border-[#FF006E]/40 shadow-[0_0_15px_rgba(255,0,110,0.3)]">
-            <img src="/logo.png" alt="OnRead Logo" className="w-full h-full object-cover" />
+            <Image src="/logo.png" alt="OnRead Logo" width={36} height={36} className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">

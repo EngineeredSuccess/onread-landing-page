@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     // 1. Record contact and trigger confirmation email via Resend
     let resendResult = null;
     if (process.env.RESEND_API_KEY) {
-      resendResult = await addContactToResend(trimmedEmail, source || 'landing_page');
+      resendResult = await addContactToResend(trimmedEmail);
     } else {
       console.log('[Waitlist API] No RESEND_API_KEY configured.');
     }

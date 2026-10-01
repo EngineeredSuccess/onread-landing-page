@@ -221,7 +221,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Store result in Supabase
-    if (supabase) {      const { data: stored, error: storeError } = await supabase
+    if (supabase) {
+      const { error: storeError } = await supabase
         .from('aura_checks')
         .insert({
           user_id,
@@ -233,9 +234,7 @@ export async function POST(req: NextRequest) {
           red_flags: verdict.redFlags,
           action_plan: verdict.actionPlan,
           created_at: new Date().toISOString(),
-        })
-        .select()
-        .single();
+        });
 
       if (storeError) {
         console.error('[AuraCheck] Store error:', storeError.message);

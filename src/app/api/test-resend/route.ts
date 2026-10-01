@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  const result = await addContactToResend(email, 'test_endpoint');
+  const result = await addContactToResend(email);
 
   return NextResponse.json({
     message: 'Test email execution completed',

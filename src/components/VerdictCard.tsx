@@ -155,7 +155,7 @@ export default function VerdictCard({ verdict, onNewCheck, onShare }: VerdictCar
             <span className="text-[10px] text-neutral-400">GPT-4o Vision</span>
           </div>
           <p className="text-sm sm:text-base text-white font-medium italic leading-snug">
-            "{verdict.roast}"
+            &ldquo;{verdict.roast}&rdquo;
           </p>
         </div>
 
