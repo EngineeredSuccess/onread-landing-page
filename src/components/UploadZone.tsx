@@ -150,7 +150,6 @@ export default function UploadZone({ onUpload, isLoading, disabled, error }: Upl
               ref={fileInputRef}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
-              capture="environment"
               className="hidden"
               id="screenshot-upload"
               onChange={(e) => {

@@ -14,11 +14,7 @@ const FAQS = [
   },
   {
     q: 'How much does it cost to use?',
-    a: 'Waitlist members in Drop #01 receive 3 free Aura checks every week forever, plus a +100 Aura bonus at launch.',
-  },
-  {
-    q: 'When is Drop #01 going live?',
-    a: 'Invitations roll out in batches to the first 500 waitlist signups as soon as the beta doors open. Move fast before all 500 spots are taken.',
+    a: 'You can try 3 Aura checks for free each week. No account or email is needed to get your verdict.',
   },
 ];
 

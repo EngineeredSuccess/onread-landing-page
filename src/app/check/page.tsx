@@ -198,8 +198,7 @@ export default function CheckPage() {
 
             {checksRemaining <= 0 && (
               <p className="rounded-xl border border-[#FF2D2D]/30 bg-[#FF2D2D]/10 p-4 text-center text-sm text-[#FF8A8A]">
-                You&apos;ve used all 3 free checks this week. Join the waitlist for launch updates.
-                {' '}<Link href="/#waitlist" className="underline underline-offset-2">Join the waitlist</Link>
+                You&apos;ve used all 3 free checks this week. Come back when your free checks reset.
               </p>
             )}
             <p className="text-center text-[11px] font-mono text-neutral-600">Your screenshot is processed for this check and then removed.</p>

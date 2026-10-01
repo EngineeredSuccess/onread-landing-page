@@ -1,12 +1,12 @@
 'use client';
 
 import React from 'react';
-import WaitlistForm from './WaitlistForm';
-import { Zap } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight } from 'lucide-react';
 
 export default function HeroSection() {
   return (
-    <section id="waitlist" className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 overflow-hidden scroll-mt-20">
+    <section id="check" className="relative pt-12 pb-16 sm:pt-20 sm:pb-24 px-4 sm:px-6 overflow-hidden scroll-mt-20">
       {/* Ambient background glows */}
       <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] sm:w-[600px] h-[350px] sm:h-[600px] bg-[#FF006E]/15 rounded-full blur-[120px] pointer-events-none -z-10" />
       <div className="absolute top-1/3 left-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-[#BC13FE]/10 rounded-full blur-[100px] pointer-events-none -z-10" />
@@ -15,8 +15,8 @@ export default function HeroSection() {
         {/* Top Viral Pill */}
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#141414] border border-[#FF006E]/30 text-xs font-mono mb-6 shadow-[0_0_15px_rgba(255,0,110,0.15)] animate-pulse-subtle">
           <span className="flex h-2 w-2 rounded-full bg-[#FF006E]" />
-          <span className="text-neutral-300 font-medium">DROP 01: THE AURA TRIAL</span>
-          <span className="text-[#FF006E] font-bold">INVITE-ONLY</span>
+          <span className="text-neutral-300 font-medium">THE AURA CHECK IS LIVE</span>
+          <span className="text-[#39FF14] font-bold">TRY IT FREE</span>
         </div>
 
         {/* Big Aggressive H1 */}
@@ -36,40 +36,18 @@ export default function HeroSection() {
           .
         </p>
 
-        {/* Waitlist Form Component */}
-        <div className="w-full max-w-lg mb-6">
-          <WaitlistForm id="hero-waitlist" source="hero" />
-        </div>
-
-        {/* FOMO Counter & Progress Bar */}
-        <div className="w-full max-w-md bg-[#121212] border border-[#27272A] rounded-xl p-3.5 shadow-inner">
-          <div className="flex items-center justify-between text-xs font-mono mb-2">
-            <div className="flex items-center gap-1.5 text-neutral-300">
-              <Zap className="w-3.5 h-3.5 text-[#FFB800] fill-[#FFB800]" />
-              <span className="font-semibold text-white">First Drop Limit:</span>
-            </div>
-            <div className="text-neutral-400">
-              <span className="text-[#FF006E] font-bold">392</span> / 500 spots taken
-            </div>
-          </div>
-
-          {/* Progress bar */}
-          <div className="w-full h-2 bg-[#1F1F23] rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-[#FF006E] to-[#BC13FE] rounded-full shadow-[0_0_10px_rgba(255,0,110,0.6)]"
-              style={{ width: '78.4%' }}
-            />
-          </div>
-
-          <p className="text-[11px] font-mono text-neutral-400 mt-2 text-center">
-            🔥 <span className="text-white font-medium">Only 500 spots available in the first drop.</span> Zero randoms.
-          </p>
-        </div>
+        <Link
+          href="/check"
+          className="mb-5 inline-flex items-center justify-center gap-2 rounded-xl bg-[#FF006E] px-7 py-4 font-display text-base font-bold text-white shadow-[0_0_25px_rgba(255,0,110,0.35)] transition hover:bg-[#ff1a7d] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+        >
+          CHECK YOUR CHAT <ArrowRight className="h-5 w-5" />
+        </Link>
+        <p className="mb-6 text-xs font-mono text-neutral-500">No account. No email. Just your screenshot and the verdict.</p>
 
         {/* Platform Logos / Social Proof Bar */}
         <div className="mt-12 flex flex-col items-center gap-3">
           <span className="text-xs font-mono uppercase tracking-widest text-neutral-400">
-            As seen on
+            MADE FOR
           </span>
           <div className="flex items-center gap-6 sm:gap-10 text-neutral-400 text-sm font-display font-bold">
             <div className="flex items-center gap-2 hover:text-white transition-colors">
